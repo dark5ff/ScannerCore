@@ -1,0 +1,349 @@
+{% extends 'dashboard/base0.html' %} {% block mainContent %}
+<!-- End Navbar -->
+      <div class="content">
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-chart">
+                    <!-- card 로 하면 커짐에 따라 늘어나고, card card-tasks는 크기 유지 -->
+                    <div class="card-header">
+                      <h4 class="card-title"> Dark5ff Status</h4>
+                    </div>
+                    <div class="card-body">
+                        <div style="overflow:scroll; width:100%; height:150px;" id='process-log'></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <div class="row">
+        <div class ="col-12">
+        <div class="card card-tasks" style="height:375px">
+            <div class="card-header">
+              <h4 class="card-title"> Crawler List</h4>
+            </div>
+            <div class="card-body">
+              <div class="table-full-width table-responsive">
+                <table class="table tablesorter " id="">
+                  <thead class=" text-primary">
+                    <tr>
+                      <th>
+                        Name
+                      </th>
+                      <th>
+                        URL
+                      </th>
+                      <th>
+                        Status
+                      </th>
+                      <th class="text-center">
+                        Activation
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for crawler in crawlers %}
+                        <tr>
+                          <td>
+                                {{ crawler.engine_name }}
+                          </td>
+                          <td>
+                                {{ crawler.engine_url }}
+                          </td>
+                          <td>
+                                {{ crawler.status_code }}
+                          </td>
+                          <td class="text-center">
+                            <input type="checkbox" name="xxx" value="{{ cralwer.engine_name }}" checked>
+
+                          </td>
+                        </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            </div>
+          </div>
+        </div>
+
+
+        <div class="row">
+      <!-- *********************************최상단 그래프******************************** -->
+          <div class="col-12">
+            <div class="card card-chart">
+
+            <div class="card-header">
+              <h4 class="card-title"> Add Keyword</h4>
+            </div>
+ 
+                <div class="card-body">
+                  <div class="table-full-width table-responsive ps">
+                    <!-- <label style="font-size:1rem;">&nbsp;Search</label> -->
+                    <input type="text" class="form-control" placeholder="Setting Search Keyword" style="width:100%;" >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+
+    <div class="row">
+        <div class ="col-12">
+        <div class="card card-tasks" style="height:375px">
+            <div class="card-header">
+              <h4 class="card-title"> Keyword Setting</h4>
+            </div>
+            <div class="card-body">
+              <div class="table-full-width table-responsive">
+                <table class="table tablesorter " id="">
+                  <thead class=" text-primary">
+                    <tr>
+                      <th>
+                        Keyword
+                      </th>
+                      <th>
+                        User
+                      </th>
+                      <th>
+                        Time
+                      </th>
+                      <th class="text-center">
+                          Case sensitive
+                      </th>
+                      <th class="text-center">
+                        Delete
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for keyword in keywords %}
+                        <tr>
+                          <td>
+                                {{ keyword.keyword }}
+                          </td>
+                          <td>
+                                {{ keyword.created_from.username }}
+                          </td>
+                          <td>
+                                {{ keyword.created_at }}
+                          </td>
+                          <td class="text-center">
+                            <input type="checkbox" name="xxx" value="{{ keyword.keyword}}" checked>
+                          </td>
+
+                          <td class="text-center">
+                           <a href="javascript:deleteKeyword('{{ keyword.keyword}}');"><p style="font-size:15px;"> X </p></a>
+                          </td>
+                        </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-12">
+            <div class="card card-chart">
+            <div class="card-header">
+              <h4 class="card-title"> Donwload to Local HTML</h4>
+            </div>
+                <div class="card-body">
+                  <div class="table-full-width table-responsive ps"> 
+                    <div style="text-align: center;">
+                        <img src="/static/img/dark1.png" style="width:700px; height:350px"> ==>
+                        <img src="/static/img/dark2.png" style="width:700px; height:350px"> 
+
+                    </div>
+                 </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+
+{% endblock %}
+{% block scriptContent %}
+
+  <!--   Core JS Files   -->
+  <script src="/static//assets/js/core/jquery.min.js"></script>
+  <script src="/static//assets/js/core/popper.min.js"></script>
+  <script src="/static//assets/js/core/bootstrap.min.js"></script>
+  <script src="/static//assets/js/plugins/perfect-scrollbar.jquery.min.js"></script>
+  <!--  Google Maps Plugin    -->
+  <!-- Place this tag in your head or just before your close body tag. -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY_HERE"></script>
+  <!-- Chart JS -->
+  <script src="/static//assets/js/plugins/chartjs.min.js"></script>
+  <!--  Notifications Plugin    -->
+  <script src="/static//assets/js/plugins/bootstrap-notify.js"></script>
+  <!-- Control Center for Black Dashboard: parallax effects, scripts for the example pages etc -->
+  <script src="/static//assets/js/black-dashboard.min.js?v=1.0.0"></script><!-- Black Dashboard DEMO methods, don't include it in your project! -->
+  <script src="/static//assets/demo/demo.js"></script>
+  <script>
+    $(document).ready(function() {
+
+      $().ready(function() {
+        $sidebar = $('.sidebar');
+        $navbar = $('.navbar');
+        $main_panel = $('.main-panel');
+
+        $full_page = $('.full-page');
+
+        $sidebar_responsive = $('body > .navbar-collapse');
+        sidebar_mini_active = true;
+        white_color = false;
+
+        window_width = $(window).width();
+
+        fixed_plugin_open = $('.sidebar .sidebar-wrapper .nav li.active a p').html();
+
+
+
+        $('.fixed-plugin a').click(function(event) {
+          if ($(this).hasClass('switch-trigger')) {
+            if (event.stopPropagation) {
+              event.stopPropagation();
+            } else if (window.event) {
+              window.event.cancelBubble = true;
+            }
+          }
+        });
+
+        $('.fixed-plugin .background-color span').click(function() {
+          $(this).siblings().removeClass('active');
+          $(this).addClass('active');
+
+          var new_color = $(this).data('color');
+
+          if ($sidebar.length != 0) {
+            $sidebar.attr('data', new_color);
+          }
+
+          if ($main_panel.length != 0) {
+            $main_panel.attr('data', new_color);
+          }
+
+          if ($full_page.length != 0) {
+            $full_page.attr('filter-color', new_color);
+          }
+
+          if ($sidebar_responsive.length != 0) {
+            $sidebar_responsive.attr('data', new_color);
+          }
+        });
+
+        $('.switch-sidebar-mini input').on("switchChange.bootstrapSwitch", function() {
+          var $btn = $(this);
+
+          if (sidebar_mini_active == true) {
+            $('body').removeClass('sidebar-mini');
+            sidebar_mini_active = false;
+            blackDashboard.showSidebarMessage('Sidebar mini deactivated/static/.');
+          } else {
+            $('body').addClass('sidebar-mini');
+            sidebar_mini_active = true;
+            blackDashboard.showSidebarMessage('Sidebar mini activated/static/.');
+          }
+
+          // we simulate the window Resize so the charts will get updated in realtime.
+          var simulateWindowResize = setInterval(function() {
+            window.dispatchEvent(new Event('resize'));
+          }, 180);
+
+          // we stop the simulation of Window Resize after the animations are completed
+          setTimeout(function() {
+            clearInterval(simulateWindowResize);
+          }, 1000);
+        });
+
+        $('.switch-change-color input').on("switchChange.bootstrapSwitch", function() {
+          var $btn = $(this);
+
+          if (white_color == true) {
+
+            $('body').addClass('change-background');
+            setTimeout(function() {
+              $('body').removeClass('change-background');
+              $('body').removeClass('white-content');
+            }, 900);
+            white_color = false;
+          } else {
+
+            $('body').addClass('change-background');
+            setTimeout(function() {
+              $('body').removeClass('change-background');
+              $('body').addClass('white-content');
+            }, 900);
+
+            white_color = true;
+          }
+
+
+        });
+
+        $('.light-badge').click(function() {
+          $('body').addClass('white-content');
+        });
+
+        $('.dark-badge').click(function() {
+          $('body').removeClass('white-content');
+        });
+      });
+    });
+  </script>
+  <script>
+    $(document).ready(function() {
+      // Javascript method's body can be found in assets/js/demos.js
+
+    });
+  </script>
+  <script src="https://cdn.trackjs.com/agent/v3/latest/t.js"></script>
+  <script>
+    window.TrackJS &&
+      TrackJS.install({
+        token: "ee6fab19c5a04ac1a32a645abde4613a",
+        application: "black-dashboard-free"
+      });
+  </script>
+  <script>
+  const setBg = () => {
+      const randomColor = Math.floor(Math.random()*16777215).toString(16);
+      var colorTest = "#" + randomColor;
+      return colorTest;
+    }
+
+</script>
+<script>
+
+
+    let ws = new WebSocket('ws://192.168.163.4:8765')
+	var log = document.getElementById('logger')
+    var para = document.createElement("p");
+	ws.addEventListener('message', function (event) {
+        if(event.data == "ping"){
+            ws.send("pong");
+        }
+        else {
+
+            var splitData = event.data.split("\n");
+            splitData= splitData.slice(0,-1);
+            if( splitData.length > 1) {
+                setTimeout(function(){
+                    for (var line in splitData){
+                        var paragraph = document.createElement("p");
+                        paragraph.textContent = splitData[line];
+                        paragraph.style.color = setBg();
+                        $('#process-log').append(paragraph);
+                        var $textarea = $('#process-log');
+                        $('#process-log').scrollTop($('#process-log')[0].scrollHeight);
+                    }},500);
+                }
+            }
+	});		
+</script>
+{% endblock %}

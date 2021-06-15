@@ -1,0 +1,48 @@
+{% extends 'static/dashboard/base.html' %} {% block mainContent %}
+
+<div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
+	<h1 class="display-4">Secure Chat</h1>
+	<p class="lead">
+		Quickly build an effective pricing table for your potential customers with this Bootstrap example. It's built with default Bootstrap
+		components and utilities with little customization.
+	</p>
+
+
+    <p> Hello </p>
+
+
+	<div class="input-group mb-3">
+		<input
+			type="text"
+			id="room-name-input"
+			class="form-control from-control-lg"
+			placeholder="Room Name"
+			aria-label="Room Name"
+			aria-describedby="basic-addon2"
+		/>
+			<input id="room-name-submit" class="btn btn-secondary btn-lg active" type="button" value="Send" />
+	</div>
+
+
+</div>
+
+
+{% endblock %}
+
+{% block scriptContent %}
+    <script>
+        document.querySelector('#room-name-input').focus();
+        document.querySelector('#room-name-input').onkeyup = function(e) {
+            if (e.keyCode === 13) {  // enter, return
+                document.querySelector('#room-name-submit').click();
+            }
+        };
+
+        document.querySelector('#room-name-submit').onclick = function(e) {
+            var roomName = document.querySelector('#room-name-input').value;
+            window.location.href = '/api/?url=' + roomName;
+        };
+    </script>
+
+
+{% endblock %}

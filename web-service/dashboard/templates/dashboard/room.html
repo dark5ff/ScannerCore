@@ -1,0 +1,189 @@
+{% extends 'dashboard/base.html' %} {% block mainContent %}
+<div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
+	<h1 class="display-4">{{ roomName }}</h1>
+	<p class="lead">
+		Quickly build an effective pricing table for your potential customers with this Bootstrap example. It's built with default Bootstrap
+		components and utilities with little customization.
+	</p>
+</div>
+
+<div class="container">
+	<div class="card-deck mb-3 text-center">
+		<textarea class="form-control" id="chat-log" cols="20" rows="15" readonly="readonly"></textarea>
+	</div>
+
+	<div class="input-group mb-3">
+		<input
+			type="text"
+			id="chat-message-input"
+			class="form-control from-control-lg"
+			placeholder="Room Name"
+			aria-label="Room Name"
+			aria-describedby="basic-addon2"
+		/>
+		<input id="chat-message-submit" class="btn btn-secondary btn-lg active" type="button" value="Send" />
+	</div>
+	<div class="container">
+		<div class="card-deck mb-3 text-center">
+			<div class="card mb-4 box-shadow">
+				<div class="card-header">
+					<h4 class="my-0 font-weight-normal">Private Key</h4>
+				</div>
+				<div class="card-body" style="padding: 0; padding: 0; height: 300px">
+					<textarea
+						placeholder="Input Server Private Key, Server name is '{{ roomName }}' "
+						class="form-control"
+						id="privkey"
+						style="width: 100%; height: 100%"
+					></textarea>
+				</div>
+			</div>
+			<div class="card mb-4 box-shadow">
+				<div class="card-header">
+					<h4 class="my-0 font-weight-normal">Public Key</h4>
+				</div>
+				<div class="card-body" style="padding: 0; padding: 0; height: 300px">
+					<textarea
+						id="pubkey"
+						class="form-control"
+						style="width: 100%; height: 100%"
+						class="form-control-lg"
+						readonly="readonly"
+					></textarea>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+{% endblock %} {% block scriptContent %}
+<script>
+	var roomName = '{{ roomName }}';
+
+	var chatSocket = new WebSocket(
+	    'ws://' + window.location.host +
+	    '/ws/chat/' + roomName + '/');
+
+	chatSocket.onmessage = function(e) {
+	    var data = JSON.parse(e.data);
+	    var message = data['message'];
+	    var username = data['username'];
+	    var crypt = new JSEncrypt();
+	    crypt.setPrivateKey($('#privkey').val());
+	    var message=(crypt.decrypt(message));
+		document.querySelector('#chat-log').value += (username + ' : ' +message + '\n');
+		var $textarea = $('#chat-log');
+		$textarea.scrollTop($textarea[0].scrollHeight);
+	};
+
+	chatSocket.onclose = function(e) {
+	    console.error('Chat socket closed unexpectedly');
+	};
+
+	document.querySelector('#chat-message-input').focus();
+	document.querySelector('#chat-message-input').onkeyup = function(e) {
+	    if (e.keyCode === 13) {  // enter, return
+	        document.querySelector('#chat-message-submit').click();
+	    }
+	};
+
+	document.querySelector('#chat-message-submit').onclick = function(e) {
+	    var messageInputDom = document.querySelector('#chat-message-input');
+	    var message = messageInputDom.value;
+	        var crypt = new JSEncrypt();
+	        crypt.setPrivateKey($('#privkey').val());
+	        var pubkey = $('#pubkey').val();
+	        if (!pubkey) {
+	            $('#pubkey').val(crypt.getPublicKey());
+	        }
+
+	        var input = message;
+	        var crypted = $('#crypted').val();
+	        var message = crypt.encrypt(input);
+	        chatSocket.send(JSON.stringify({
+	        'message': message
+	    }));
+
+	    messageInputDom.value = '';
+	};
+
+
+	    var generateKeys = function () {
+	        var keySize = 1024;
+	        var crypt = new JSEncrypt({ default_key_size: keySize });
+	        crypt.getKey();
+
+	        var PubKey= crypt.getPublicKey()
+	        var PriKey= crypt.getPrivateKey()
+
+	        $('#privkey').val(crypt.getPrivateKey());
+	        $('#pubkey').val(crypt.getPublicKey());
+
+	        return [PubKey,PriKey];
+		};
+
+
+
+
+	    function getCookie(name)
+	    {
+	        var cookieValue = null;
+	        if (document.cookie && document.cookie != '') {
+	            var cookies = document.cookie.split(';');
+	            for (var i = 0; i < cookies.length; i++) {
+	                var cookie = jQuery.trim(cookies[i]);
+	                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+	                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+	                    break;
+	                }
+	            }
+	        }
+	        return cookieValue;
+	    }
+	    $.ajaxSetup({
+	         beforeSend: function(xhr, settings) {
+	             if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+	                 xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+	             }
+	         }
+	    });
+
+	    {% if pubKey  %}
+	        var pubKey=
+	        `{{ pubKey}}`;
+	        $('#pubkey').val(pubKey);
+
+	    {% else %}
+	        var KeyPair =generateKeys();
+	        var PubKey = KeyPair[0];
+	        var PriKey = KeyPair[1];
+	        $.ajax({
+	            url:"/api/server/",
+	            type:"POST",
+	            data: {
+	                serverName: "{{ roomName }}",
+	                pubKey: PubKey,
+	            },
+
+	            success: function(result) {
+	            if (result) {
+
+	             } else {
+	                alert("Network ERROR");
+	               }
+	            }
+			});
+
+
+			var copyText = document.getElementById('privkey');
+			copyText.select();
+			copyText.setSelectionRange(0, copyText.value.length);
+			document.execCommand("copy");
+	        swal({ title: "Private key Copy OK", text: "Don't lose it. :) " , icon: "https://www.topstarnews.net/news/photo/201804/390138_35349_571.jpg",});
+
+	        $('#pubkey').val(PubKey);
+
+	    {% endif %}
+</script>
+
+{% endblock %}

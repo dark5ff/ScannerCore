@@ -1,0 +1,90 @@
+version: "3"
+
+services:
+    proxy:
+        image: darkwebproxy
+        build: ./torProxy
+        restart: always
+        ports:
+            - "9050:9050"
+        volumes:
+            - ./log:/tmp/tor/log
+            
+    nginx:
+        build: ./nginx-conf 
+        restart: always
+        ports:
+            - "80:80"
+        volumes:
+            - ./web-service/:/app/
+            - ./web-service/static_share:/app/static_share
+            
+        depends_on:
+            - django_uwsgi
+    redis:
+        image: redis
+        command: --port 6379
+        ports: 
+            - 6379:6379
+
+    django_uwsgi:
+        image: django_uwsgi
+        build:
+            context: .
+            dockerfile: ./web-service/Dockerfile
+        environment:
+            - DJANGO_DEBUG=True
+            - DJANGO_REDIS_HOST=redis
+            - DJANGO_REDIS_PORT=6379
+            - DJANGO_DB_PORT=3306
+            - DJANGO_DB_NAME=dark5ff
+            - DJANGO_DB_HOST=mysql
+            - DJANGO_DB_USERNAME=intadd
+            - DJANGO_DB_PASSWORD=intadd
+            - DJANGO_SECRET_KEY=dev_secret_key
+            - PROXY_HOST=proxy
+            - PROXY_PORT=9050
+        command: python manage.py makemigrations
+        command: python manage.py migrate
+        command: uwsgi --ini uwsgi.ini
+        volumes:
+            - ./web-service/:/app/
+    process:
+        image: process
+        build:
+            context: .
+            dockerfile: ./process/Dockerfile
+        command: python logToSocket.py
+        ports:
+            - 8765:8765
+        volumes:
+            - ./process/:/app/
+            - ./log/:/app/log
+    mysql:
+        image: mysql:8.0.12
+        restart: always
+        volumes:
+            - ./docker/mysql:/var/lib/mysql/
+
+        environment:
+            - MYSQL_ROOT_PASSWORD=sampledb
+            - MYSQL_DATABASE=dark5ff
+            - MYSQL_USER=intadd
+            - MYSQL_PASSWORD=intadd
+        command: --default-authentication-plugin=mysql_native_password
+        ports:
+            - "3306:3306"
+    crawler:
+        image : crawler
+        build:
+            context: .
+            dockerfile: ./crawler/Dockerfile
+        command: python crawlerEngine.py
+        environment:
+            - DJANGO_DB_NAME=dark5ff
+            - DJANGO_DB_HOST=mysql
+
+            - proxy_host=proxy
+        volumes:
+            - ./crawler/:/app/
+ 

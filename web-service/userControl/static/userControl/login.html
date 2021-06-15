@@ -1,0 +1,25 @@
+{% extends 'secureChat/base.html' %} {% block mainContent %}
+
+<div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
+	<h1 class="display-4">Secure Chat</h1>
+	<p class="lead">
+		Quickly build an effective pricing table for your potential customers with this Bootstrap example. It's built with default Bootstrap
+		components and utilities with little customization.
+	</p>
+
+    <p> Hello </p>
+
+    <form method="post" action="">
+        {% csrf_token %}
+
+        <p><label for="id_username">Username:</label> 
+        <input class="form-control from-control-lg" type="text" name="username" id="id_username"> 
+
+        <p><label for="id_password">Password:</label> 
+        <input class="form-control from-control-lg" type="text" name="password" id="id_password"></p>
+        <input type="submit" value="로그인"  class="btn btn-secondary btn-lg active" >
+    </form>
+</div>
+
+
+{% endblock %}
